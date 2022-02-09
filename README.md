@@ -64,6 +64,8 @@ Many thanks to [nawa](https://github.com/nawa) who had started 'torrentmonitor-d
 	- `CRON_COMMAND="/bin/sh /tmp/update.sh"` Specify custom command to update torrents, e.g. for extended logging. Default: `"php -q /data/htdocs/engine.php"`
 	- `PHP_TIMEZONE="Europe/Moscow"` Set default timezone for PHP. Default - UTC.
 	- `PHP_MEMORY_LIMIT="512M"` Set php memory limit. Default - 512M.
+	- `PUID=<number>` Set user ID for file ownership.
+	- `PGUD=<number>` Set group ID for file ownership.
 - if you want guest system to have host's timezone, add `localtime` binding as in the example below.
 
 #### Example:
@@ -78,6 +80,8 @@ Many thanks to [nawa](https://github.com/nawa) who had started 'torrentmonitor-d
 			-e PHP_TIMEZONE="Europe/Moscow" \
 			-e CRON_TIMEOUT="15 8-23 * * *" \
 			-e CRON_COMMAND="/bin/sh /tmp/update.sh" \
+			-e PUID=1001 \
+			-e PGID=1000 \
 			alfonder/torrentmonitor
 
 ### Compose

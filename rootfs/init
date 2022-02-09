@@ -22,6 +22,10 @@ echo "php_admin_value[memory_limit] = ${PHP_MEMORY_LIMIT}" >> /etc/php7/php-fpm.
 # Set cron timeuot for engine.php
 echo "${CRON_TIMEOUT} ${CRON_COMMAND}" > /etc/crontabs/nginx
 
+# Force user/group ID
+[ "q${PUID}" == "q" ] || usermod -o -u "$PUID" nginx
+[ "q${PGID}" == "q" ] || groupmod -o -g "$PGID" nginx
+
 # Set owner for app directory
 chown -R nginx:nginx /data/htdocs
 chown -R nginx:nginx /var/log/nginx

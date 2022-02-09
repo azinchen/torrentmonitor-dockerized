@@ -2,7 +2,7 @@ name: Update TorrentMonitor version
 
 on:
   schedule:
-    - cron: 0 */3 * * *
+    - cron: 58 * * * *
 
 jobs:
   update_torrentmonitor:
@@ -34,12 +34,12 @@ jobs:
           echo "Base pr_branch=${PR_BRANCH}, date=${DATE}, tm_version=${TM_VERSION}"
 
       - name: Create Pull Request, Bump tm-latest.zip, torrentmonitor version ${{ steps.downloadtorrentmonitor.outputs.tm_version }}
-        uses: peter-evans/create-pull-request@v3.12.0
+        uses: peter-evans/create-pull-request@v3.12.1
         with:
           branch: ${{ steps.downloadtorrentmonitor.outputs.pr_branch }}
-          commit-message: Bump tm-latest.zip, version ${{ steps.downloadtorrentmonitor.outputs.tm_version }}
+          commit-message: TM -> ${{ steps.downloadtorrentmonitor.outputs.tm_version }}
           delete-branch: true
-          title: Bump tm-latest.zip, version ${{ steps.downloadtorrentmonitor.outputs.tm_version }}
+          title: Bump TM to version ${{ steps.downloadtorrentmonitor.outputs.tm_version }}
           body: |
             Bump tm-latest.zip, version ${{ steps.downloadtorrentmonitor.outputs.tm_version }}, date ${{ steps.downloadtorrentmonitor.outputs.date }}
 
@@ -47,3 +47,4 @@ jobs:
           labels: |
             dependencies
             github_actions
+            release
