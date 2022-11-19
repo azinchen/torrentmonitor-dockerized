@@ -9,5 +9,6 @@ updates:
   # Configuration for Dockerfile
   - package-ecosystem: "docker"
     directory: "/"
+    target-branch: "testing"
     schedule:
       interval: "daily"
