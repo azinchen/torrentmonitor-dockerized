@@ -3,7 +3,7 @@ FROM alpine:3.15.6 as rootfs-builder
 
 COPY rootfs/ /rootfs/
 COPY patches/ /tmp/
-ADD http://korphome.ru/torrent_monitor/tm-latest.zip /tmp/tm-latest.zip
+ADD http://tormon.ru/tm-latest.zip /tmp/tm-latest.zip
 
 RUN apk --no-cache add \
         unzip \
@@ -19,7 +19,7 @@ RUN apk --no-cache add \
 FROM alpine:3.15.6
 MAINTAINER Alexander Fomichev <fomichev.ru@gmail.com>
 
-ENV VERSION="1.8.9.9" \
+ENV VERSION="2.0.5" \
     RELEASE_DATE="" \
     CRON_TIMEOUT="0 * * * *" \
     CRON_COMMAND="php -q /data/htdocs/engine.php >> /var/log/nginx/torrentmonitor_cron_error.log 2>&1" \
