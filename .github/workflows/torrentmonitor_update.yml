@@ -2,7 +2,7 @@ name: Update TorrentMonitor version
 
 on:
   schedule:
-    - cron: '0 */3 * * *'
+    - cron: '0 * * * *'
 
 jobs:
   update_torrentmonitor:
@@ -16,11 +16,11 @@ jobs:
         id: downloadtorrentmonitor
         shell: bash
         run: |
-          wget -q https://tormon.ru/tm-latest.zip -qO /tmp/tm-latest.zip
-          unzip -q /tmp/tm-latest.zip -d /tmp/
+          wget -q https://github.com/ElizarovEugene/TorrentMonitor/raw/refs/heads/master/version.txt -qO /tmp/version.txt
+          wget -q https://github.com/ElizarovEugene/TorrentMonitor/raw/refs/heads/master/changelog.txt -qO /tmp/changelog.txt
 
-          TM_VERSION=$(jq -r '.system' /tmp/TorrentMonitor-master/version.txt)
-          TM_DATE=$(head -n 1 /tmp/TorrentMonitor-master/changelog.txt | awk '{print $1;}')
+          TM_VERSION=$(jq -r '.system' /tmp/version.txt)
+          TM_DATE=$(head -n 1 /tmp/changelog.txt | awk '{print $1;}')
 
           sed -i "s/\(ENV VERSION=*\)[^ ]*/\1\"${TM_VERSION}\"/" Dockerfile
           sed -i "s/\(    RELEASE_DATE=*\)[^ ]*/\1\"${TM_DATE}\"/" Dockerfile
