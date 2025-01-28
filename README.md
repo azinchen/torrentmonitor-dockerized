@@ -7,26 +7,41 @@ Dockerized torrentmonitor
 ========
 [[RU]](./README-RU.md)
 
-Info about project - https://github.com/ElizarovEugene/TorrentMonitor
+Info about the project - https://github.com/ElizarovEugene/TorrentMonitor
 
-Supported torrent trackers
+### Supported torrent trackers
+
+#### Theme update tracking:
 - anidub.com
 - animelayer.ru
+- baibako.tv
+- booktracker.org
 - casstudio.tv
-- **kinozal.tv**
+- hamsterstudio.org
+- kinozal.me
+- lostfilm.tv
+- newstudio.tv
+- nnmclub.to
+- pornolab.net
+- riperam.org
+- rustorka.com
+- rutor.info
+- **rutracker.org**
+- tfile.cc
+
+#### Release group update tracking:
+- booktracker.org
 - nnm-club.ru
 - pornolab.net
-- rustorka.com
-- **rutracker.org**
-- rutor.org
+- rutracker.org
 - tfile.me
-- tracker.0day.kiev.ua
-- tv.mekc.info
-- baibako.tv 
+
+#### Feed scraping:
+- baibako.tv
 - hamsterstudio.org
-- **lostfilm.tv**
+- lostfilm.tv (+ собственное заркало)
 - newstudio.tv
-- novafilm.tv
+
 
 ### Credits
 Many thanks to [nawa](https://github.com/nawa) who had started 'torrentmonitor-dockerized' project back several years ago. His great job made me fork this project when he stopped support it.
@@ -40,29 +55,36 @@ Many thanks to [nawa](https://github.com/nawa) who had started 'torrentmonitor-d
 
 		docker pull alfonder/torrentmonitor:latest
 
-	Alternative way: get the image from GitHub Registry:
+<details>
+  <summary>Alternative way (get the image from GitHub Registry):</summary>
 
 		docker pull ghcr.io/alfonder/torrentmonitor:latest
+</details>
 
-4. Run container:
+4. Create persistent volumes:
+
+		docker volume create torrentfiles
+		docker volume create db
+
+5. Run container:
 
 		docker container run -d \
 			--name torrentmonitor \
 			--restart unless-stopped \
 			-p 8080:80 \
-			-v <path_to_torrents_folder>:/data/htdocs/torrents \
-			-v <path_to_db_folder>:/data/htdocs/db \
+			-v torrentfiles:/data/htdocs/torrents \
+			-v db:/data/htdocs/db \
 			alfonder/torrentmonitor
-	You should change database and downloaded torrents location to your paths. As a result you will reach persistence, so you will not lose your data on delete/re-create containers
+	You will not lose your data on delete/re-create containers
 
-5. Open browser on page [http://localhost:8080](http://localhost:8080)
-6. Configure the web application and enjoy
+6. Open browser on page [http://localhost:8080](http://localhost:8080)
+7. Configure the web application and enjoy
 
 ### Advanced Usage
 - you can change server port from `8080` to your preferred port (`-p` option)
 - also you can specify environment variables to change default behaviour of container 
 	- `CRON_TIMEOUT="0 */3 * * *"` Specify execution timeout in [crontab format](https://crontab.guru/examples.html). Default - every hour.
-	- `CRON_COMMAND="/bin/sh /tmp/update.sh"` Specify custom command to update torrents, e.g. for extended logging. Default: `"php -q /data/htdocs/engine.php"`
+	- `CRON_COMMAND="<...>"` Specify custom command to update torrents, e.g. for alternate logging. Default: `"php -q /data/htdocs/engine.php"`
 	- `PHP_TIMEZONE="Europe/Moscow"` Set default timezone for PHP. Default - UTC.
 	- `PHP_MEMORY_LIMIT="512M"` Set php memory limit. Default - 512M.
 	- `PUID=<number>` Set user ID for file ownership.
@@ -80,7 +102,6 @@ Many thanks to [nawa](https://github.com/nawa) who had started 'torrentmonitor-d
 			-v /etc/localtime:/etc/localtime:ro \
 			-e PHP_TIMEZONE="Europe/Moscow" \
 			-e CRON_TIMEOUT="15 8-23 * * *" \
-			-e CRON_COMMAND="/bin/sh /tmp/update.sh" \
 			-e PUID=1001 \
 			-e PGID=1000 \
 			alfonder/torrentmonitor
@@ -100,7 +121,6 @@ services:
     volumes:
       - ${DATA_DIR}/torrents:/data/htdocs/torrents
       - ${DATA_DIR}/db:/data/htdocs/db
-      - ${DATA_DIR}/logs:/data/htdocs/logs
       - /etc/localtime:/etc/localtime:ro
     environment:
       - PHP_TIMEZONE=${TIMEZONE}
