@@ -1,43 +1,62 @@
 #!/bin/sh
 
-# Populate database if not exists
-test -f /data/htdocs/db/tm.sqlite || cp /data/htdocs/db_schema/tm.sqlite /data/htdocs/db/tm.sqlite
-test -f /data/htdocs/db/config.xml || cp /data/htdocs/config.xml /data/htdocs/db/config.xml
+PHP_FILE="/data/htdocs/class/qBittorrent.class.php"
 
-# Configure system
-# Set PHP timezone
-sed -i "/date\.timezone/d" /etc/php7/php.ini
-echo "date.timezone = ${PHP_TIMEZONE}" >> /etc/php7/php.ini
-sed -i "/date\.timezone/d" /etc/php7/cli/php.ini
-echo "date.timezone = ${PHP_TIMEZONE}" >> /etc/php7/cli/php.ini
+# --- Handle 'category' entry in PHP file ---
+if [ -n "$QBITTORRENT_CATEGORY" ]; then
+  INDENT=$(grep -m1 "'root_folder'" "$PHP_FILE" | sed -n 's/^\([[:space:]]*\).*root_folder.*/\1/p')
+  NEW_LINE="${INDENT}'category' => '${QBITTORRENT_CATEGORY}',"
+  if grep -q "'category'" "$PHP_FILE"; then
+    CURRENT_LINE=$(grep "'category'" "$PHP_FILE" | head -n1 | sed 's/^[[:space:]]*//;s/,$//')
+    EXPECTED_LINE="'category' => '${QBITTORRENT_CATEGORY}'"
+    if [ "$CURRENT_LINE" != "$EXPECTED_LINE" ]; then
+      ESCAPED_LINE=$(printf "%s\n" "$NEW_LINE" | sed 's/[\/&]/\\&/g')
+      sed -i "/'category'/s/^[[:space:]]*.*'category' => .*$/$(echo "$ESCAPED_LINE")/" "$PHP_FILE"
+    fi
+  else
+    sed -i "s/\('root_folder' => true\)[[:space:]]*$/\1,/" "$PHP_FILE"
+    ESCAPED_LINE=$(printf "%s\n" "$NEW_LINE" | sed 's/[\/&]/\\&/g')
+    sed -i "/'root_folder' => true,/a\\$ESCAPED_LINE" "$PHP_FILE"
+  fi
+else
+  if grep -q "'category'" "$PHP_FILE"; then
+    sed -i "/'category' => .*,\{0,1\}[[:space:]]*$/d" "$PHP_FILE"
+    sed -i "s/\('root_folder' => true\),[[:space:]]*$/\1/" "$PHP_FILE"
+  fi
+fi
 
-# Set PHP memory limit
-sed -i "/memory_limit/d" /etc/php7/php.ini
-echo "memory_limit = ${PHP_MEMORY_LIMIT}" >> /etc/php7/php.ini
-sed -i "/memory_limit/d" /etc/php7/cli/php.ini
-echo "memory_limit = ${PHP_MEMORY_LIMIT}" >> /etc/php7/cli/php.ini
+# --- Ensure required files exist ---
+[ -f /data/htdocs/db/tm.sqlite ] || cp /data/htdocs/db_schema/tm.sqlite /data/htdocs/db/tm.sqlite
+[ -f /data/htdocs/db/config.xml ] || cp /data/htdocs/config.xml /data/htdocs/db/config.xml
+
+# --- Set PHP timezone and memory ---
+for PHP_INI in /etc/php7/php.ini /etc/php7/cli/php.ini; do
+  sed -i "/date\.timezone/d" "$PHP_INI"
+  echo "date.timezone = ${PHP_TIMEZONE}" >> "$PHP_INI"
+  sed -i "/memory_limit/d" "$PHP_INI"
+  echo "memory_limit = ${PHP_MEMORY_LIMIT}" >> "$PHP_INI"
+done
+
 sed -i "/memory_limit/d" /etc/php7/php-fpm.conf
 echo "php_admin_value[memory_limit] = ${PHP_MEMORY_LIMIT}" >> /etc/php7/php-fpm.conf
 
-# Set cron timeuot for engine.php
+# --- Configure cron ---
 echo "${CRON_TIMEOUT} ${CRON_COMMAND}" > /etc/crontabs/nginx
 
-# Force user/group ID
-[ "q${PUID}" == "q" ] || usermod -o -u "$PUID" nginx
-[ "q${PGID}" == "q" ] || groupmod -o -g "$PGID" nginx
+# --- Set UID/GID if specified ---
+[ -n "$PUID" ] && usermod -o -u "$PUID" nginx
+[ -n "$PGID" ] && groupmod -o -g "$PGID" nginx
 
-# Set owner for app directory
+# --- Set ownership and permissions ---
 chown -R nginx:nginx /data/htdocs
 chown -R nginx:nginx /var/log/nginx
-
-# Write temp files by nginx
 chmod 777 /tmp
 
-# Compatibility links
-test -f /usr/bin/php-fpm || ln -s /usr/sbin/php-fpm7 /usr/bin/php-fpm
-test -f /usr/bin/php || ln -s /usr/bin/php7 /usr/bin/php
+# --- Create symlinks if missing ---
+[ -f /usr/bin/php-fpm ] || ln -s /usr/sbin/php-fpm7 /usr/bin/php-fpm
+[ -f /usr/bin/php ] || ln -s /usr/bin/php7 /usr/bin/php
 
-# Start apps
+# --- Start services ---
 php-fpm
 nginx -g 'daemon off;' &
 crond -f >> /proc/1/fd/1
