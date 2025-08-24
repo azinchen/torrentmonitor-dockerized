@@ -1,9 +1,10 @@
-# apk builder
-FROM alpine:3.15.6 AS apk-builder
+# apk builder (build gnu-libiconv)
+FROM alpine:3.22.1 AS apk-builder
 
 RUN apk --no-cache add \
         alpine-sdk \
         sudo \
+        wget \
         && \
     adduser -D builduser && \
     addgroup builduser abuild && \
@@ -15,12 +16,12 @@ USER builduser
 WORKDIR /home/builduser
 
 RUN abuild-keygen -an -i -q && \
-    wget https://gitlab.alpinelinux.org/alpine/aports/-/raw/3.13-stable/community/gnu-libiconv/APKBUILD && \
+    wget -O APKBUILD "https://gitlab.alpinelinux.org/alpine/aports/-/raw/3.13-stable/community/gnu-libiconv/APKBUILD" && \
     abuild checksum && \
     abuild -r
 
 # rootfs builder
-FROM alpine:3.15.6 AS rootfs-builder
+FROM alpine:3.22.1 AS rootfs-builder
 
 COPY rootfs/ /rootfs/
 COPY patches/ /tmp/
@@ -36,8 +37,8 @@ RUN apk --no-cache add \
     cat /rootfs/data/htdocs/db_schema/sqlite.sql | sqlite3 /rootfs/data/htdocs/db_schema/tm.sqlite
 
 # Main image
-FROM alpine:3.15.6
-MAINTAINER Alexander Fomichev <fomichev.ru@gmail.com>
+FROM alpine:3.22.1
+LABEL maintainer="Alexander Fomichev <fomichev.ru@gmail.com>"
 LABEL org.opencontainers.image.source="https://github.com/alfonder/torrentmonitor-dockerized/"
 
 ENV VERSION="2.2" \
@@ -54,21 +55,20 @@ COPY --from=apk-builder /home/builduser/packages /tmp/packages
 RUN apk --no-cache add \
         nginx \
         shadow \
-        php7 \
-        php7-common \
-        php7-fpm \
-        php7-curl \
-        php7-sqlite3 \
-        php7-pdo_sqlite \
-        php7-xml \
-        php7-json \
-        php7-simplexml \
-        php7-session \
-        php7-iconv \
-        php7-mbstring \
-        php7-ctype \
-        php7-zip \
-        php7-dom \
+        php84 \
+        php84-common \
+        php84-fpm \
+        php84-curl \
+        php84-sqlite3 \
+        php84-pdo_sqlite \
+        php84-xml \
+        php84-simplexml \
+        php84-session \
+        php84-iconv \
+        php84-mbstring \
+        php84-ctype \
+        php84-zip \
+        php84-dom \
         && \
     apk --allow-untrusted add /tmp/packages/home/*/gnu-libiconv-1.15-r3.apk && \
     rm -rf /tmp/* && \
