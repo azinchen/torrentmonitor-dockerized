@@ -1,5 +1,5 @@
 # apk builder (build gnu-libiconv)
-FROM alpine:3.22.1 AS apk-builder
+FROM alpine:3.23.0 AS apk-builder
 
 RUN apk --no-cache add \
         alpine-sdk \
@@ -21,7 +21,7 @@ RUN abuild-keygen -an -i -q && \
     abuild -r
 
 # rootfs builder
-FROM alpine:3.22.1 AS rootfs-builder
+FROM alpine:3.23.0 AS rootfs-builder
 
 COPY rootfs/ /rootfs/
 COPY patches/ /tmp/
@@ -37,7 +37,7 @@ RUN apk --no-cache add \
     cat /rootfs/data/htdocs/db_schema/sqlite.sql | sqlite3 /rootfs/data/htdocs/db_schema/tm.sqlite
 
 # Main image
-FROM alpine:3.22.1
+FROM alpine:3.23.0
 LABEL maintainer="Alexander Fomichev <fomichev.ru@gmail.com>"
 LABEL org.opencontainers.image.source="https://github.com/alfonder/torrentmonitor-dockerized/"
 
@@ -55,20 +55,20 @@ COPY --from=apk-builder /home/builduser/packages /tmp/packages
 RUN apk --no-cache add \
         nginx \
         shadow \
-        php84 \
-        php84-common \
-        php84-fpm \
-        php84-curl \
-        php84-sqlite3 \
-        php84-pdo_sqlite \
-        php84-xml \
-        php84-simplexml \
-        php84-session \
-        php84-iconv \
-        php84-mbstring \
-        php84-ctype \
-        php84-zip \
-        php84-dom \
+        php85 \
+        php85-common \
+        php85-fpm \
+        php85-curl \
+        php85-sqlite3 \
+        php85-pdo_sqlite \
+        php85-xml \
+        php85-simplexml \
+        php85-session \
+        php85-iconv \
+        php85-mbstring \
+        php85-ctype \
+        php85-zip \
+        php85-dom \
         && \
     apk --allow-untrusted add /tmp/packages/home/*/gnu-libiconv-1.15-r3.apk && \
     rm -rf /tmp/* && \
