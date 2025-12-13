@@ -1,8 +1,6 @@
 # apk builder (build gnu-libiconv 1.15 from source)
 FROM alpine:3.23.0 AS apk-builder
 
-COPY patches/gnu-libiconv-1.15-musl-compat.patch /tmp/
-
 RUN apk --no-cache add \
         alpine-sdk \
         sudo \
