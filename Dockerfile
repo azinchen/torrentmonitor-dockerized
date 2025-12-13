@@ -55,6 +55,7 @@ ENV VERSION="2.2.1" \
     CRON_COMMAND="php -q /data/htdocs/engine.php 2>&1" \
     PHP_TIMEZONE="UTC" \
     PHP_MEMORY_LIMIT="512M" \
+    NGINX_PORT="80" \
     LD_PRELOAD="/usr/lib/preloadable_libiconv.so"
 
 COPY --from=rootfs-builder /rootfs/ /

@@ -47,6 +47,9 @@ echo "php_admin_value[memory_limit] = ${PHP_MEMORY_LIMIT}" >> /etc/php85/php-fpm
 # Set cron timeout for engine.php
 echo "${CRON_TIMEOUT} ${CRON_COMMAND}" > /etc/crontabs/nginx
 
+# Configure nginx port
+sed -i "s/listen[[:space:]]*[0-9]*;/listen       ${NGINX_PORT};/" /etc/nginx/conf.d/default.conf
+
 # Force user/group ID
 [ "q${PUID}" == "q" ] || usermod -o -u "$PUID" nginx
 [ "q${PGID}" == "q" ] || groupmod -o -g "$PGID" nginx
