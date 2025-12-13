@@ -1,5 +1,7 @@
-# apk builder (build gnu-libiconv)
+# apk builder (build gnu-libiconv 1.15 from source)
 FROM alpine:3.23.0 AS apk-builder
+
+COPY patches/gnu-libiconv-1.15-musl-compat.patch /tmp/
 
 RUN apk --no-cache add \
         alpine-sdk \
@@ -18,7 +20,15 @@ WORKDIR /home/builduser
 RUN abuild-keygen -an -i -q && \
     wget -O APKBUILD "https://gitlab.alpinelinux.org/alpine/aports/-/raw/3.13-stable/community/gnu-libiconv/APKBUILD" && \
     abuild checksum && \
-    abuild -r
+    abuild deps && \
+    abuild fetch && \
+    abuild unpack && \
+    cd src/libiconv-1.15 && \
+    sed -i '39i#if !defined(__GLIBC__) && !defined(__linux__)' lib/loop_wchar.h && \
+    sed -i '41i#endif' lib/loop_wchar.h && \
+    cd ../.. && \
+    abuild build && \
+    abuild rootpkg
 
 # rootfs builder
 FROM alpine:3.23.0 AS rootfs-builder
