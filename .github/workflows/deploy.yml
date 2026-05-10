@@ -14,8 +14,33 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check if only .github files changed
+        id: github_only
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == "refs/heads/"* ]]; then
+            # For push events on branches, check changed files
+            if [[ -z "${{ github.event.before }}" ]]; then
+              echo "skip=false" >> $GITHUB_OUTPUT
+            else
+              CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | grep -v '^\.github/' || echo "")
+              
+              if [[ -z "${CHANGED_FILES}" ]]; then
+                echo "Only .github files changed, skipping build and deploy"
+                echo "skip=true" >> $GITHUB_OUTPUT
+              else
+                echo "skip=false" >> $GITHUB_OUTPUT
+              fi
+            fi
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Get branch name
+        if: ${{ steps.github_only.outputs.skip != 'true' }}
         id: git
         shell: bash
         run: |
@@ -49,12 +74,14 @@ jobs:
           echo "Action branch=${BRANCH_NAME} tag=${IS_TAG} ref=${GITHUB_REF} image_tag=${IMAGE_TAG} build_date=${BUILD_DATE} platforms=${BUILD_PLATFORMS}"
 
       - name: Login to DockerHub
+        if: ${{ steps.github_only.outputs.skip != 'true' }}
         uses: docker/login-action@v4.1.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
+        if: ${{ steps.github_only.outputs.skip != 'true' }}
         uses: docker/login-action@v4.1.0
         with:
           registry: ghcr.io
@@ -62,14 +89,17 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up QEMU
+        if: ${{ steps.github_only.outputs.skip != 'true' }}
         uses: docker/setup-qemu-action@v4.0.0
         with:
           platforms: ${{ env.build_platforms }}
 
       - name: Set up Docker Buildx
+        if: ${{ steps.github_only.outputs.skip != 'true' }}
         uses: docker/setup-buildx-action@v4.0.0
 
       - name: Build and push ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
+        if: ${{ steps.github_only.outputs.skip != 'true' }}
         uses: docker/build-push-action@v7.1.0
         with:
           platforms: ${{ env.build_platforms }}
@@ -81,18 +111,18 @@ jobs:
             ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
 
-      - name: Build and push ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-        if: ${{ env.is_tag == 'true' }}
-        uses: docker/build-push-action@v7.1.0
-        with:
-          platforms: ${{ env.build_platforms }}
-          push: true
-          build-args: |
-            DOCKERIZED_VERSION=${{ env.image_tag }}
-            BUILD_DATE=${{ env.build_date }}
-          tags: |
-            ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+      - name: Tag and push ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+        if: ${{ steps.github_only.outputs.skip != 'true' && env.is_tag == 'true' }}
+        shell: bash
+        run: |
+          # Pull the previously built image and retag it as latest
+          docker pull ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
+          docker tag ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }} ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+
+          docker pull ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
+          docker tag ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }} ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
 
 #      - name: Update repo description
 #        if: ${{ env.is_tag == 'true' }}
@@ -115,10 +145,11 @@ jobs:
         uses: appleboy/telegram-action@v1.0.1
         env:
           telegram_to: ${{ secrets.TELEGRAM_TO }}
-        if: ${{ env.telegram_to != '' }}
+        if: ${{ steps.github_only.outputs.skip != 'true' && env.telegram_to != '' }}
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
+          disable_web_page_preview: true
           message: |
               New Docker image is built and pushed:
               ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
