@@ -256,15 +256,23 @@ docker container inspect -f '{{ index .Config.Labels "ru.korphome.version" }}' t
 
 Доступны образы для:
 - **x86-64** - 64-битные процессоры Intel/AMD, большинство ПК/серверов
-- **x86** - 32-битные процессоры Intel/AMD, старые ПК
+- ~~x86~~ *(устаревший)* - 32-битные процессоры Intel/AMD, старые ПК
 - **arm64** - 64-битные ARM процессоры (Raspberry Pi 4+, Raspberry Pi Compute Module 4, Apple Silicon Mac через Docker Desktop, AWS Graviton инстансы, платы NVIDIA Jetson, ODROID-N2+, Orange Pi 5, Rock Pi 4, Banana Pi M5)
 - **arm32v7** - 32-битные ARMv7 процессоры (Raspberry Pi 2/3, Raspberry Pi Zero 2 W, Raspberry Pi Compute Module 3, BeagleBone Black, ODROID-XU4, ASUS Tinker Board, Orange Pi PC, Banana Pi M2+, NanoPi NEO)
 - **arm32v6** - 32-битные ARMv6 процессоры (Raspberry Pi 1 Model A/B, Raspberry Pi Zero/Zero W, Raspberry Pi Compute Module 1)
-- **ppc64le** - процессоры IBM POWER (серверы IBM, мейнфреймы)
-- **s390x** - процессоры IBM Z мейнфреймов (IBM LinuxONE, системы IBM Z)
+- ~~ppc64le~~ *(устаревший)* - процессоры IBM POWER (серверы IBM, мейнфреймы)
+- ~~s390x~~ *(устаревший)* - процессоры IBM Z мейнфреймов (IBM LinuxONE, системы IBM Z)
 - **riscv64** - 64-битные процессоры RISC-V (платы SiFive, StarFive VisionFive, платы Allwinner D1)
 
 Другие платформы — по запросу.
+
+---
+
+## Метки Docker образов
+
+- **latest** - самая последняя версия, основанная на текущем Alpine Linux *(рекомендуется)*
+- **vXXXX-X** - конкретная версия TM и сборка
+- **legacy** - старая стабильная версия, основанная на Alpine Linux 3.15 и PHP 7
 
 ---
 

@@ -260,15 +260,23 @@ docker container inspect -f '{{ index .Config.Labels "ru.korphome.version" }}' t
 
 Images are available for:
 - **x86-64** - Intel/AMD 64-bit processors, most desktop/server PCs
-- **x86** - Intel/AMD 32-bit processors, older PCs
+- ~~x86~~ *(deprecated)* - Intel/AMD 32-bit processors, older PCs
 - **arm64** - 64-bit ARM processors (Raspberry Pi 4+, Raspberry Pi Compute Module 4, Apple Silicon Macs via Docker Desktop, AWS Graviton instances, NVIDIA Jetson boards, ODROID-N2+, Orange Pi 5, Rock Pi 4, Banana Pi M5)
 - **arm32v7** - 32-bit ARMv7 processors (Raspberry Pi 2/3, Raspberry Pi Zero 2 W, Raspberry Pi Compute Module 3, BeagleBone Black, ODROID-XU4, ASUS Tinker Board, Orange Pi PC, Banana Pi M2+, NanoPi NEO)
 - **arm32v6** - 32-bit ARMv6 processors (Raspberry Pi 1 Model A/B, Raspberry Pi Zero/Zero W, Raspberry Pi Compute Module 1)
-- **ppc64le** - IBM POWER processors (IBM servers, mainframes)
-- **s390x** - IBM Z mainframe processors (IBM LinuxONE, IBM Z systems)
+- ~~ppc64le~~ *(deprecated)* - IBM POWER processors (IBM servers, mainframes)
+- ~~s390x~~ *(deprecated)* - IBM Z mainframe processors (IBM LinuxONE, IBM Z systems)
 - **riscv64** - 64-bit RISC-V processors (SiFive boards, StarFive VisionFive, Allwinner D1 boards)
 
 Other platforms can be added on request.
+
+---
+
+## Docker Image Labels
+
+- **latest** - the most recent version, based on the current Alpine Linux image *(recommended)*
+- **vXXXX-X** - the exact TM version and build
+- **legacy** - the old stable version, based on Alpine Linux 3.15 and PHP 7
 
 ---
 
