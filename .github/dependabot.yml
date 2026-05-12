@@ -9,6 +9,7 @@ updates:
   # Configuration for Dockerfile
   - package-ecosystem: "docker"
     directory: "/"
-    target-branch: "alpine-3.21"
+    ignore-branches:
+      - "legacy"
     schedule:
       interval: "daily"
