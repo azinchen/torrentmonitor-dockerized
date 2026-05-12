@@ -29,6 +29,4 @@ jobs:
             New ${{ github.event_name }} created
 
             See details:
-            https://github.com/${{ github.repository }}/pulls
-            or
-            https://github.com/${{ github.repository }}/issues
+            ${{ github.event_name == 'pull_request' && github.event.pull_request.html_url || github.event.issue.html_url }}
