@@ -158,8 +158,8 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           disable_web_page_preview: true
           message: |
-              New Docker image is built and pushed:
-              ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_version }}
+            New Docker image is built and pushed:
+            ${{ steps.git.outputs.tags }}
 
-              https://hub.docker.com/r/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
-              ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_version }}
+            https://hub.docker.com/r/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+            https://github.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/pkgs/container/${{ env.IMAGE_NAME }}
