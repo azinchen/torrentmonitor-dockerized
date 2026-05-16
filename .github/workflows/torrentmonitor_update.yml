@@ -1,4 +1,4 @@
-name: Update TorrentMonitor version
+name: Check/Update TorrentMonitor version
 
 on:
   schedule:
@@ -6,13 +6,13 @@ on:
 
 jobs:
   update_torrentmonitor:
-    name: Update TorrentMonitor verions
+    name: Check/Update TorrentMonitor version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Update torrentmonitor version
+      - name: Obtain torrentmonitor version
         id: downloadtorrentmonitor
         shell: bash
         run: |
@@ -34,6 +34,7 @@ jobs:
           echo "Base pr_branch=${PR_BRANCH}, date=${TM_DATE}, tm_version=${TM_VERSION}"
 
       - name: Create Pull Request, Bump tm-latest.zip, torrentmonitor version ${{ env.tm_version }}
+        id: create_pr
         uses: peter-evans/create-pull-request@v8
         with:
           branch: ${{ env.pr_branch }}
@@ -48,3 +49,9 @@ jobs:
             dependencies
             github_actions
             release
+
+      - name: Trigger notify workflow for created PR
+        if: ${{ steps.create_pr.outputs.pull-request-number }}
+        run: gh workflow run notify.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
