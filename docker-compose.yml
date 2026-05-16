@@ -12,4 +12,4 @@ services:
       - /etc/localtime:/etc/localtime:ro
     environment:
       - PHP_TIMEZONE=${TIMEZONE}
-      - CRON_TIMEOUT=${SCHEDULE} 
+      - CRON_TIMEOUT=${SCHEDULE}
