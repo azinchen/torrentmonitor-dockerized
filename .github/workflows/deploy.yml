@@ -82,7 +82,7 @@ jobs:
           echo "$TAGS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          echo "Action branch=${BRANCH_NAME} tag=${IS_TAG} ref=${GITHUB_REF} image_version=${IMAGE_VERSION} build_date=${BUILD_DATE} platforms=${BUILD_PLATFORMS}"
+          echo "Action branch=${BRANCH_NAME} tag=${IS_TAG} ref=${GITHUB_REF} image_version=${IMAGE_VERSION} build_date=${BUILD_DATE} platforms=${BUILD_PLATFORMS} tags=${TAGS}"
 
       - name: Login to DockerHub
         if: ${{ steps.github_only.outputs.skip != 'true' }}
