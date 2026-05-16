@@ -273,6 +273,7 @@ docker container inspect -f '{{ index .Config.Labels "ru.korphome.version" }}' t
 - **latest** - самая последняя версия, основанная на текущем Alpine Linux *(рекомендуется)*
 - **vXXXX-X** - конкретная версия TM и сборка
 - **legacy** - старая стабильная версия, основанная на Alpine Linux 3.15 и PHP 7
+- **devel** - отладочная версия *(не рекомендуется)*
 
 ---
 

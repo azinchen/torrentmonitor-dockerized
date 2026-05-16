@@ -277,6 +277,7 @@ Other platforms can be added on request.
 - **latest** - the most recent version, based on the current Alpine Linux image *(recommended)*
 - **vXXXX-X** - the exact TM version and build
 - **legacy** - the old stable version, based on Alpine Linux 3.15 and PHP 7
+- **devel** - developer version for debugging *(not recommended)*
 
 ---
 
