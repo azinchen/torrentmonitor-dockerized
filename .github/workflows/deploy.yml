@@ -52,9 +52,9 @@ jobs:
           BRANCH_NAME=$(echo ${GITHUB_REF} | sed -e "s/.*\///g")
 
           if [[ ${BRANCH_NAME} == "master" ]]; then
-            IMAGE_TAG="devel"
+            IMAGE_VERSION="devel"
           else
-            IMAGE_TAG=${BRANCH_NAME}
+            IMAGE_VERSION=${BRANCH_NAME}
           fi
 
           # Set platforms: amd64 only for non-master branches, all platforms for master and tags
@@ -66,12 +66,23 @@ jobs:
 
           BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
 
-          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_ENV
-          echo "is_tag=${IS_TAG}" >> $GITHUB_ENV
+          echo "image_version=${IMAGE_VERSION}" >> $GITHUB_ENV
           echo "build_platforms=${BUILD_PLATFORMS}" >> $GITHUB_ENV
           echo "build_date=${BUILD_DATE}" >> $GITHUB_ENV
 
-          echo "Action branch=${BRANCH_NAME} tag=${IS_TAG} ref=${GITHUB_REF} image_tag=${IMAGE_TAG} build_date=${BUILD_DATE} platforms=${BUILD_PLATFORMS}"
+          # Build tags list with conditional :latest tags for tag releases
+          TAGS="${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${IMAGE_VERSION}"$'\n'"ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${IMAGE_VERSION}"
+          
+          if [[ ${IS_TAG} == "true" ]]; then
+            TAGS+=$'\n'"${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
+            TAGS+=$'\n'"ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
+          fi
+          
+          echo "tags<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAGS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "Action branch=${BRANCH_NAME} tag=${IS_TAG} ref=${GITHUB_REF} image_version=${IMAGE_VERSION} build_date=${BUILD_DATE} platforms=${BUILD_PLATFORMS}"
 
       - name: Login to DockerHub
         if: ${{ steps.github_only.outputs.skip != 'true' }}
@@ -98,40 +109,36 @@ jobs:
         if: ${{ steps.github_only.outputs.skip != 'true' }}
         uses: docker/setup-buildx-action@v4.0.0
 
-      - name: Build and push ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
+      - name: Build and push ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_version }}
         if: ${{ steps.github_only.outputs.skip != 'true' }}
         uses: docker/build-push-action@v7.1.0
         with:
           platforms: ${{ env.build_platforms }}
           push: true
           build-args: |
-            DOCKERIZED_VERSION=${{ env.image_tag }}
+            DOCKERIZED_VERSION=${{ env.image_version }}
             BUILD_DATE=${{ env.build_date }}
-          tags: |
-            ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
+          tags: ${{ steps.git.outputs.tags }}
 
-      - name: Tag and push ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-        if: ${{ steps.github_only.outputs.skip != 'true' && env.is_tag == 'true' }}
+      - name: Check if README.md changed
+        if: ${{ steps.github_only.outputs.skip != 'true' }}
+        id: readme_changed
         shell: bash
         run: |
-          # Pull the previously built image and retag it as latest
-          docker pull ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
-          docker tag ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }} ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          if git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | grep -q '^README\.md$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
 
-          docker pull ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
-          docker tag ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }} ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-          docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-
-#      - name: Update repo description
-#        if: ${{ env.is_tag == 'true' }}
-#        uses: peter-evans/dockerhub-description@v3
-#        with:
-#          username: ${{ secrets.DOCKERHUB_USERNAME }}
-#          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-#          repository: ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
-#          short-description: ${{ github.event.repository.description }}
+      - name: Sync README to DockerHub
+        if: ${{ steps.github_only.outputs.skip != 'true' && steps.readme_changed.outputs.changed == 'true' }}
+        uses: ms-jpq/sync-dockerhub-readme@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          readme: ./README.md
 
       - name: Skip Telegram notification
         shell: bash
@@ -152,7 +159,7 @@ jobs:
           disable_web_page_preview: true
           message: |
               New Docker image is built and pushed:
-              ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
+              ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_version }}
 
               https://hub.docker.com/r/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
-              ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_tag }}
+              ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.image_version }}
