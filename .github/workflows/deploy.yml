@@ -87,7 +87,7 @@ jobs:
             TAGS="${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${IMAGE_VERSION}"$'\n'"${TAGS}"
           fi
 
-          if [[ ${IS_TAG} == "true" ]]; then
+          if false && [[ ${IS_TAG} == "true" ]]; then
             TAGS+=$'\n'"ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
             if [[ "${PUSH_DOCKERHUB}" == "true" ]]; then
               TAGS+=$'\n'"${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
