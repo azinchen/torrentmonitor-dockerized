@@ -41,6 +41,7 @@ jobs:
         id: create_pr
         uses: peter-evans/create-pull-request@v8
         with:
+          token: ${{ secrets.PR_PAT }}
           branch: ${{ env.pr_branch }}
           commit-message: TM -> ${{ env.tm_version }}
           delete-branch: true
